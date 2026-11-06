@@ -1,5 +1,6 @@
 package com.vibemusic.service;
 
+import com.vibemusic.model.dto.DancePlaylistSaveDTO;
 import com.vibemusic.model.dto.PlaylistAddDTO;
 import com.vibemusic.model.dto.PlaylistDTO;
 import com.vibemusic.model.dto.PlaylistUpdateDTO;
@@ -22,6 +23,9 @@ import java.util.List;
  * @since 2025-01-09
  */
 public interface IPlaylistService extends IService<Playlist> {
+
+    // 保存新的公开练习歌单并返回 ID；当前表不支持所有权、隐私或持久化曲目顺序。
+    Result<Long> saveDancePlaylist(DancePlaylistSaveDTO dto);
 
     // 获取所有歌单
     Result<PageResult<PlaylistVO>> getAllPlaylists(PlaylistDTO playlistDTO);

@@ -4,12 +4,18 @@ import com.vibemusic.constant.JwtClaimsConstant;
 import com.vibemusic.constant.MessageConstant;
 import com.vibemusic.enumeration.LikeStatusEnum;
 import com.vibemusic.enumeration.RoleEnum;
+import com.vibemusic.exception.DancePlaylistValidationException;
+import com.vibemusic.mapper.PlaylistBindingMapper;
 import com.vibemusic.mapper.PlaylistMapper;
+import com.vibemusic.mapper.SongMapper;
 import com.vibemusic.mapper.UserFavoriteMapper;
+import com.vibemusic.model.dto.DancePlaylistSaveDTO;
 import com.vibemusic.model.dto.PlaylistAddDTO;
 import com.vibemusic.model.dto.PlaylistDTO;
 import com.vibemusic.model.dto.PlaylistUpdateDTO;
 import com.vibemusic.model.entity.Playlist;
+import com.vibemusic.model.entity.PlaylistBinding;
+import com.vibemusic.model.entity.Song;
 import com.vibemusic.model.entity.UserFavorite;
 import com.vibemusic.model.vo.PlaylistDetailVO;
 import com.vibemusic.model.vo.PlaylistVO;
@@ -31,7 +37,9 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +64,54 @@ public class PlaylistServiceImpl extends ServiceImpl<PlaylistMapper, Playlist> i
     private UserFavoriteMapper userFavoriteMapper;
     @Autowired
     private MinioService minioService;
+    @Autowired
+    private SongMapper songMapper;
+    @Autowired
+    private PlaylistBindingMapper playlistBindingMapper;
+
+    /**
+     * 复用既有表创建公开歌单。全部歌曲先验证，写入失败抛异常以回滚整个事务。
+     * 插入顺序与请求一致，但关联表没有排序列，读取时不保证该顺序。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "playlistCache", allEntries = true)
+    public Result<Long> saveDancePlaylist(DancePlaylistSaveDTO dto) {
+        List<Long> songIds = dto.getSongIds();
+        if (new HashSet<>(songIds).size() != songIds.size()) {
+            throw new DancePlaylistValidationException("歌曲 ID 不能重复");
+        }
+
+        String title = dto.getTitle().strip();
+        if (playlistMapper.selectCount(new QueryWrapper<Playlist>().eq("title", title)) > 0) {
+            throw new DancePlaylistValidationException("歌单标题已存在");
+        }
+
+        List<Song> songs = songMapper.selectBatchIds(songIds);
+        Set<Long> existingIds = songs.stream().map(Song::getSongId).collect(Collectors.toSet());
+        List<Long> missingIds = songIds.stream().filter(id -> !existingIds.contains(id)).toList();
+        if (!missingIds.isEmpty()) {
+            throw new DancePlaylistValidationException("以下歌曲不存在：" + missingIds);
+        }
+
+        Playlist playlist = new Playlist().setTitle(title);
+        playlist.setIntroduction(dto.getDescription() == null ? null : dto.getDescription().strip());
+        // 采用第一首已验证歌曲的封面，不接收客户端传入的资源 URL。
+        songs.stream().filter(song -> song.getSongId().equals(songIds.get(0))).findFirst()
+                .ifPresent(song -> playlist.setCoverUrl(song.getCoverUrl()));
+        if (playlistMapper.insert(playlist) != 1 || playlist.getPlaylistId() == null) {
+            throw new IllegalStateException("保存练习歌单失败");
+        }
+
+        for (Long songId : songIds) {
+            PlaylistBinding binding = new PlaylistBinding()
+                    .setPlaylistId(playlist.getPlaylistId()).setSongId(songId);
+            if (playlistBindingMapper.insert(binding) != 1) {
+                throw new IllegalStateException("保存练习歌单歌曲失败");
+            }
+        }
+        return Result.success(playlist.getPlaylistId());
+    }
 
     /**
      * 获取所有歌单

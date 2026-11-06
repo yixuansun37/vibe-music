@@ -121,6 +121,23 @@ pnpm dev
 ```
 <br>
 
+## DanceFlow extension
+
+DanceFlow is a small graduate-school portfolio extension of this open-source
+Vibe Music project, originally developed by Alex-LiSun and subsequently modified
+by zl1nq. It reuses the existing Java/Spring Boot and Vue architecture to save
+real catalog songs as public dance practice playlists.
+
+The extension includes an authenticated playlist-save API, focused backend tests,
+and a save dialog for the existing AI assistant's song cards. See the
+[reproducible database-backed demo](dev/demo/README.md) for setup and verification.
+AI end-to-end integration and audio playback have **not** been validated. The
+current database schema does not preserve playlist song ordering or provide
+playlist ownership/privacy.
+
+The original [LICENSE](LICENSE), [NOTICE](NOTICE), and attribution below are
+preserved.
+
 ## Credits
 
 This project is a derivative work based on the original by [Alex-LiSun](https://github.com/Alex-LiSun), licensed under the MIT License. Modifications by zl1nq are also released under the MIT License.

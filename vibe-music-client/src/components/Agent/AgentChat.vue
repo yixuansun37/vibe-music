@@ -8,6 +8,7 @@ import { SongDetail } from '@/api/interface'
 import { extractVibeSongs, stripVibeSongsTag, VibeSong } from '@/utils/agent'
 import { useAudioPlayer } from '@/hooks/useAudioPlayer'
 import MdView from '@/components/Agent/MdView.vue'
+import SavePlaylistDialog from '@/components/Agent/SavePlaylistDialog.vue'
 import default_album from '@/assets/default_album.jpg'
 
 interface ChatMessage {
@@ -283,6 +284,11 @@ const newConversation = () => {
                   </button>
                 </div>
               </div>
+
+              <SavePlaylistDialog
+                v-if="msg.songs.length && !msg.loading"
+                :songs="msg.songs"
+              />
 
               <!-- 流式加载指示 -->
               <div v-if="msg.loading && msg.content" class="flex gap-1 pl-1">

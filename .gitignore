@@ -3,5 +3,20 @@ others
 
 ### Test ###
 **/src/test
+!vibe-music-backend/vibe-music-server/src/test/
 *.drawio
 .zcode
+
+# Local credentials and demo runtime files. Keep sanitized examples reviewable.
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.log
+__pycache__/
+*.py[cod]
+dev/demo/.local/
+dev/demo/data/
+dev/demo/volumes/
+dev/demo/logs/
+dev/demo/reports/

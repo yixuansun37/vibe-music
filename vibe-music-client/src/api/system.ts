@@ -119,6 +119,25 @@ export const getPlaylistDetail = (id: number) => {
   return http<Result>('get', `/playlist/getPlaylistDetail/${id}`)
 }
 
+export interface DancePlaylistSaveRequest {
+  title: string
+  description?: string
+  songIds: number[]
+}
+
+/** 保存练习歌单，沿用 HTTP 客户端的登录 token。 */
+export const saveDancePlaylist = (data: DancePlaylistSaveRequest) => {
+  return http<{ code: number; message: string; data?: number | null }>(
+    'post',
+    '/playlist/dance/save',
+    {
+      data,
+      // 参数错误由保存表单展示后端消息，避免通用拦截器误报“网络错误”。
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 400,
+    }
+  )
+}
+
 /** 获取用户收藏的歌曲 */
 export const getFavoriteSongs = (data: object) => {
   return http<Result>('post', '/favorite/getFavoriteSongs', { data })

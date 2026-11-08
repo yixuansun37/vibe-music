@@ -53,6 +53,20 @@ public class MusicAgentTools {
         return fillArtistNames(songs);
     }
 
+    /** 练舞生成复用相同的曲库/歌手查询，稳定排序且限制候选规模，不使用随机推荐。 */
+    public List<SongVO> practiceCandidates(List<String> musicStyles) {
+        if (musicStyles.isEmpty()) {
+            return List.of();
+        }
+        QueryWrapper<Song> query = new QueryWrapper<>();
+        query.and(styles -> {
+            for (String style : musicStyles) {
+                styles.or().like("style", style);
+            }
+        }).orderByAsc("id").last("LIMIT 200");
+        return fillArtistNames(songMapper.selectList(query));
+    }
+
     /**
      * 获取平台的推荐歌曲（随机热门歌曲，20 首）
      */

@@ -25,6 +25,10 @@ const router = createRouter({
       component: () => import('@/pages/library/index.vue'),
     },
     {
+      path: '/dance',
+      component: () => import('@/pages/dance/index.vue'),
+    },
+    {
       path: '/artist',
       component: () => import('@/pages/artist/index.vue'),
     },

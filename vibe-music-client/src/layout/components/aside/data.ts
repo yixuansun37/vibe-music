@@ -7,6 +7,7 @@ export const MenuData = [
     title: '发现',
     children: [
       { title: '曲库', icon: 'ri:music-2-line', router: '/library' },
+      { title: '舞蹈练习', icon: 'ri:rhythm-line', router: '/dance' },
       {
         title: '歌手',
         icon: 'ri:mic-line',

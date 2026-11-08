@@ -128,8 +128,10 @@ Vibe Music project, originally developed by Alex-LiSun and subsequently modified
 by zl1nq. It reuses the existing Java/Spring Boot and Vue architecture to save
 real catalog songs as public dance practice playlists.
 
-The extension includes an authenticated playlist-save API, focused backend tests,
-and a save dialog for the existing AI assistant's song cards. See the
+The extension includes a three-section dance practice generator at `/dance`, an
+authenticated playlist-save API, focused backend tests, and a save dialog for the
+existing AI assistant's song cards. The generator uses real catalog songs and
+supports a clearly labeled non-AI mode. See the
 [reproducible database-backed demo](dev/demo/README.md) for setup and verification.
 AI end-to-end integration and audio playback have **not** been validated. The
 current database schema does not preserve playlist song ordering or provide

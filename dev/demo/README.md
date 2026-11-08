@@ -66,6 +66,11 @@ open `/playlist/<playlist_id>` using the ID from verification. Saving through an
 response button still requires a separately configured real DashScope service;
 do not inject artificial AI cards and call that an AI demonstration.
 
+The `/dance` page can generate real catalog-based practice plans without an AI
+key and labels that deterministic mode as non-AI. Run
+`python3 dev/demo/verify_practice.py` after starting the backend to verify generation
+and saving against real services. See [generator rules](../../vibe-music-backend/docs/dance-practice.md).
+
 The schema has no owner/privacy fields and no playlist-song position column:
 playlists are public/shared, and song order is **not guaranteed to survive reads**.
 The verifier reports the observed order honestly. Missing media files are expected;

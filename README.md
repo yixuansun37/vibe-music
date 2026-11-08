@@ -1,146 +1,209 @@
-<!-- <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
-  <img src="./favicon.ico" alt="Vibe Music Icon" width="100">
-  <h1>Vibe Music</h1>
-</div> -->
-<!-- --- -->
-<div align="center">
-  <img src="./favicon.ico" alt="Vibe Music Icon" width="100">
-  <h3>Vibe Music</h3>
+# DanceFlow
 
-</div>
+**A dance-practice playlist MVP extending the open-source Vibe Music platform.**
 
-<p align="center">
+DanceFlow turns real catalog songs into a warm-up, main-practice and freestyle
+preview, then saves the selected songs through an authenticated API. The working
+local demo uses deterministic rules and needs **no AI API key**.
 
-  <img src="https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?labelColor=555&logo=springboot" alt="Spring Boot">
-<img src="https://img.shields.io/badge/Vue-3-41B883?logo=vue.js&labelColor=34495E" alt="Vue">
-  <img src="https://img.shields.io/badge/Spring%20AI-1.1.2-6DB33F?logo=spring" alt="Spring AI">
-    <img src="https://img.shields.io/badge/license-MIT-blue" alt="license MIT">
-</p>
+This is an extension of the Java/Spring Boot and Vue application originally
+created by [Alex-LiSun](https://github.com/Alex-LiSun) and subsequently modified by
+[zl1nq](https://github.com/zl1nq). The existing music platform, authentication,
+player, administration UI and Spring AI assistant are reused, not presented as
+work built from scratch. [LICENSE](LICENSE), [NOTICE](NOTICE) and attribution are
+preserved.
 
+## Implemented extensions
 
-<!-- <p align="center">
-  <img src="https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apache-maven" alt="Maven">
+- A `/dance` interface for three style mappings and 5–90 minute practice targets.
+- Three preview sections: warm-up, main practice and freestyle.
+- Real database songs only, duplicate prevention, exact millisecond accounting,
+  visible duration shortages, and a maximum of 50 selected songs.
+- An optional Spring AI adapter that can rank a whitelist of catalog IDs; missing
+  configuration, provider errors or invalid output produce an explicitly non-AI
+  fallback. **No successful live LLM response has been verified.**
+- An authenticated, transactional playlist-save API and Vue save dialog. Both the
+  practice page and inherited assistant's song cards reuse this saving flow.
+- A portable MySQL/Redis demo with generated local credentials, non-destructive
+  initialization, real-service verifiers and 130 backend unit/MVC test cases.
 
+## Demo screenshots
 
-</p> -->
+These are captures of the real Vue client using the real Spring Boot backend,
+MySQL and Redis, with AI disabled. No API mocks or artificial AI replies were used.
+Audio playback was not attempted; original media files are not included.
 
-<!-- <p align="center">
-  <img src="https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white" alt="MySQL">
-  <img src="https://img.shields.io/badge/Redis-7.0+-DC382D?logo=redis" alt="Redis">
-  <img src="https://img.shields.io/badge/MinIO-250907T16-00C7B1?logo=minio" alt="MinIO">
-</p> -->
+![House 20-minute practice preview in explicit non-AI mode](docs/screenshots/dance-practice.png)
 
----
+House maps to the catalog's electronic category. The verified plan contains six
+real songs totaling **19 minutes 59.660 seconds**, with a **0.340-second shortfall**.
+The individual section targets are approximate; only the total duration is a hard
+upper bound.
 
-Vibe Music 是一个前后端分离的在线音乐平台，包含**用户端音乐播放器**、**后台管理系统**和 **Spring Boot 后端服务**三大部分。用户可以在线搜索、播放、收藏和评论音乐，管理员可以在后台维护曲库与用户数据，平台还内置了一个基于大模型的 AI 音乐助手（VibeAgent）。
+![Saved playlist retrieved from the real database](docs/screenshots/saved-playlist.png)
 
-## 功能特性 ✨
+## Technology stack and architecture
 
-### 用户端（vibe-music-client）
+| Area | Technology | Origin / role |
+| --- | --- | --- |
+| Backend | Java 17 target, Spring Boot 3.5.16, Maven Wrapper | Existing application; extended with generation and saving |
+| Persistence | MyBatis-Plus, MySQL 8 | Existing schema and mappers reused |
+| Authentication/cache | JWT, Redis 7 | Existing security system reused; no administrator permissions granted |
+| Client | Vue 3, TypeScript, Vite 6, Pinia, Element Plus, Tailwind CSS | Existing client plus the DanceFlow page and save dialog |
+| Optional AI | Spring AI 1.1.2, Spring AI Alibaba 1.1.2.0 / DashScope | Existing provider; new constrained ranking adapter |
+| Verification | JUnit, Mockito, Spring Test; Python standard library | Unit/MVC tests plus separate real-service checks |
 
-- 浏览与搜索歌曲、歌手、歌单，支持核心播放控制
-- 用户注册 / 登录（JWT），个人资料编辑与头像上传
-- 收藏歌曲与歌单、发表评论与点赞、歌曲下载
-- 基于听歌历史的个性化推荐
-- 暗黑模式切换
-
-### 管理端（vibe-music-admin）
-
-- 用户管理（查看、启用 / 禁用账号）
-- 歌手、歌曲、歌单的增删改查与资源管理
-- 轮播图管理、用户反馈处理
-
-### 后端（vibe-music-backend）
-
-- RESTful API + JWT 认证，基于角色的路径权限控制（ROLE_ADMIN / ROLE_USER）
-- MinIO 对象存储管理音频、图片等媒体文件上传
-- Redis 缓存（注解缓存统一 10 分钟有效期）、邮件服务
-- **VibeAgent**：基于 Spring AI + 阿里云百炼（DashScope）的 AI 音乐助手，可通过工具调用查询真实曲库（按关键词搜歌、按风格推荐、热门歌曲），支持 SSE 流式对话与多轮会话记忆
-
-## 技术栈 🛠️
-
-| 部分 | 技术 |
-| --- | --- |
-| 用户端 / 管理端 | Vue 3、TypeScript、Vite、Pinia、Element Plus、Tailwind CSS、Axios、Artplayer |
-| 管理端模板 | [vue-pure-admin](https://github.com/pure-admin/vue-pure-admin)、ECharts |
-| 后端框架 | Spring Boot 3.5.16、Java 17、Maven 多模块 |
-| 数据层 | MyBatis-Plus、MySQL、Druid 连接池、Redis |
-| 安全 | JWT、角色路径权限映射 |
-| 存储 / 服务 | MinIO 对象存储、Jakarta Mail 邮件服务 |
-| AI | Spring AI 1.1.2、Spring AI Alibaba（DashScope / 通义千问） |
-| 包管理 | pnpm（前端）、Maven（后端） |
-
-## 整体结构 📂
-
-```
-vibe-music/
-├── vibe-music-backend/          # 后端（Maven 多模块）
-│   ├── vibe-music-server/       # 主应用：controller / service / mapper / config / agent，可执行 fat jar
-│   ├── vibe-music-model/        # 数据模型：entity / dto / vo
-│   └── vibe-music-common/       # 公共模块：常量 / 枚举 / 统一返回结果 / 工具类
-├── vibe-music-client/           # 用户端前端（Vue 3 + Vite）
-├── vibe-music-admin/            # 管理端前端（基于 vue-pure-admin）
+```mermaid
+flowchart LR
+    UI[Vue client /dance] --> API[Spring Boot REST API]
+    API --> DB[(MySQL catalog and playlists)]
+    API --> Redis[(Redis login sessions and cache)]
+    API -. optional candidate ranking .-> AI[Spring AI / DashScope]
 ```
 
-## 项目演示 📺
-[演示文档](./docs/演示.md)
+```text
+vibe-music-backend/
+  vibe-music-server/       controllers, services, mappers and AI integration
+  vibe-music-model/        request and response models, database entities
+  vibe-music-common/       shared results, constants and utilities
+vibe-music-client/        user-facing Vue application
+vibe-music-admin/         inherited administration application; not required by demo
+dev/demo/                local services, initialization and real-service verifiers
+```
 
-## 快速开始 🚀
+MinIO, SMTP and audio-player functionality belong to the inherited platform. They
+are not required for the demonstrated generation/save workflow and were not
+validated here. The admin application is outside the verified demo scope.
 
-> 更详细的文档：[如何开始](./docs/部署.md)
+## How generation works
 
-### 环境要求
+1. Map Hip-hop to 嘻哈说唱, House to 电子, or Jazz dance to 节奏布鲁斯.
+   These are music-category heuristics, not verified dance annotations.
+2. Query at most 200 matching catalog songs in stable ID order and reuse the
+   existing artist-name lookup. Reject invalid durations and duplicate IDs.
+3. Convert positive decimal seconds or strict `mm:ss` to integer milliseconds.
+   Sub-millisecond fractions round upward.
+4. Seed up to three shortest songs that fit, then greedily add the longest
+   remaining whole songs that fit. The result never exceeds the total target,
+   but the algorithm does not promise an optimal or exact duration match.
+5. Order selected songs by validated AI preference when available, otherwise by
+   ID, and make approximately 20%/60%/20% preview sections. Empty sections and
+   shortages are reported rather than filled with invented songs.
 
-- JDK 17+、Maven
-- Node.js ≥ 18、pnpm≥9
-- MySQL、Redis、MinIO
+The AI ranker cannot create IDs, change metadata/URLs, calculate durations, set
+section budgets or write playlists. The inherited chat assistant separately has
+read-only music tools; this generator is not a new autonomous tool-calling agent.
+See [generator rules](vibe-music-backend/docs/dance-practice.md) and
+[the reviewed AI/test boundaries](docs/portfolio-review.md).
 
-### 启动后端
+## Run the local demo
+
+Use a full **JDK 17+**, **Node.js 22+**, **pnpm 9.15.2**, **Python 3**, and Docker
+with Compose v2 supporting `up --wait`. The latest validation used JDK 21 and
+Node.js 24 on Linux. Internet access is needed to download dependencies/images.
+The application does not require an AI key for this demo.
 
 ```bash
+git clone --branch feat/danceflow-playlist-demo https://github.com/yixuansun37/vibe-music.git
+cd vibe-music
+python3 dev/demo/demo.py up
+python3 dev/demo/demo.py bootstrap
 cd vibe-music-backend
-# 修改 vibe-music-server/src/main/resources/application-dev.yml 中的
-# MySQL / Redis / MinIO / 邮箱 / DashScope API Key 配置
-./mvnw spring-boot:run -pl vibe-music-server
+bash ./mvnw -B clean verify
+cd ..
+python3 dev/demo/demo.py start-backend
 ```
 
-### 启动用户端
+Keep that backend terminal open. Wait for `Started VibeMusicServerApplication` in
+its private `dev/demo/.local/backend.log` before running verification. `JAVA_HOME`
+should point to a full JDK. If Maven needs an existing proxy/settings file, build
+with `bash ./mvnw -s "$MAVEN_SETTINGS" -B clean verify`; do not copy credentials or
+session-specific proxy configuration into this repository.
+
+In a second terminal, from the repository root:
 
 ```bash
 cd vibe-music-client
-pnpm install
-pnpm dev
+pnpm install --frozen-lockfile
+pnpm dev --host 127.0.0.1 --strictPort
 ```
 
-### 启动管理端
+Open the frontend on port **8090**, log in using only the generated `test_email`
+and `test_password` fields from the private `dev/demo/.local/credentials.json`,
+and select **舞蹈练习 → House → 20 minutes → 生成练习计划**. Preview the sections,
+click **保存歌单（Save Playlist）**, enter a unique title and optional description,
+then choose **查看歌单**. Do not publish the credentials file or screenshots of it.
+
+Default local ports: backend **8080**, frontend **8090**, MySQL **3307**, Redis
+**6380**. All demo services bind to loopback. The inherited HTTP client currently
+uses `localhost:8080`; use a browser in the same environment or arrange access to
+both frontend and backend ports. Forwarding only port 8090 is insufficient.
+Optional non-secret overrides are in [dev/demo/.env.example](dev/demo/.env.example).
+
+Generated credentials, external Spring configuration, logs and verification
+reports stay in ignored `dev/demo/.local/`. Initialization retains existing data
+and accounts. Do not delete only the credentials while retaining its MySQL volume.
+Stop demo containers with `python3 dev/demo/demo.py down`; this retains the volume.
+See [detailed setup](dev/demo/README.md) for configuration and troubleshooting.
+
+## Verification results
+
+Re-run against a ready backend, from the repository root:
 
 ```bash
-cd vibe-music-admin
-pnpm install
-pnpm dev
+python3 dev/demo/demo.py verify
+python3 dev/demo/verify_practice.py
 ```
-<br>
 
-## DanceFlow extension
+The second script explicitly saves the **House, 20-minute** generated selection,
+then checks MySQL rows and the saved playlist detail. Each successful verifier
+leaves one newly named demo playlist. No model response is mocked into these
+real-service checks.
 
-DanceFlow is a small graduate-school portfolio extension of this open-source
-Vibe Music project, originally developed by Alex-LiSun and subsequently modified
-by zl1nq. It reuses the existing Java/Spring Boot and Vue architecture to save
-real catalog songs as public dance practice playlists.
+| Check | Latest recorded result | Scope |
+| --- | --- | --- |
+| Backend `bash ./mvnw -B clean verify` | 130 passed; 0 failed/errors/skipped | Unit/MVC tests; provider, Redis and persistence collaborators are mocked where appropriate |
+| Client `pnpm build` | Passed | Production resource build |
+| Client `pnpm type-check` | Failed: four pre-existing errors | `build/plugins.ts`, `ResetPasswordForm.vue`, two in `themeTools.ts`; no new diagnostics |
+| Real MySQL/Redis verifiers | Passed | Login, 499-song catalog, generation, metadata/duration checks, save, SQL persistence and detail retrieval |
+| Real browser workflow | Passed | Login → House 20 → generate → save dialog → saved detail; no API mocks |
+| Live DashScope response | Not verified | AI ranker tests use a mocked `ChatModel` |
+| Audio playback | Not verified | Original media is unavailable |
 
-The extension includes a three-section dance practice generator at `/dance`, an
-authenticated playlist-save API, focused backend tests, and a save dialog for the
-existing AI assistant's song cards. The generator uses real catalog songs and
-supports a clearly labeled non-AI mode. See the
-[reproducible database-backed demo](dev/demo/README.md) for setup and verification.
-AI end-to-end integration and audio playback have **not** been validated. The
-current database schema does not preserve playlist song ordering or provide
-playlist ownership/privacy.
+The 130 automated cases are **not** 130 live-service or AI integration tests.
+The real browser check used environment-provided Playwright/Chromium; it is
+separate from the project's dependency-free Python verifier. See
+[review evidence and remaining limitations](docs/portfolio-review.md).
 
-The original [LICENSE](LICENSE), [NOTICE](NOTICE), and attribution below are
-preserved.
+## Limitations and security scope
 
-## Credits
+- Saved playlists are public/shared. The current schema has no owner/privacy or
+  position fields and does not persist practice sections or guarantee song order.
+- No BPM, tempo, energy or dance-suitability data is available. Section labels do
+  not establish physiological suitability or training effectiveness.
+- Greedy whole-song selection may leave a shortfall even when another combination
+  would be closer. Candidate count and save size are bounded.
+- Real AI ranking and inherited chat/tool calling require separate live-provider
+  validation. The no-key demo disables DashScope; inherited AI chat is unavailable
+  in this configuration, although its routes remain mapped. Use `/dance`.
+- Existing frontend type errors and its fixed local backend address remain.
+- This is a **local portfolio MVP, not a production-hardened service**. Inherited
+  code uses legacy MD5 password hashing, a hard-coded JWT signing key and
+  publicly accessible AI chat routes. Demo isolation is not a production remedy.
+  Do not expose the demo directly to the public Internet.
+- SQL metadata is not an audio license. No copyrighted audio was added; music
+  playback and the inherited MinIO/SMTP/admin workflows remain outside this demo.
 
-This project is a derivative work based on the original by [Alex-LiSun](https://github.com/Alex-LiSun), licensed under the MIT License. Modifications by zl1nq are also released under the MIT License.
+## Attribution and project materials
 
+This project is a derivative work based on the original by
+[Alex-LiSun](https://github.com/Alex-LiSun), licensed under the MIT License.
+Modifications by [zl1nq](https://github.com/zl1nq) are also released under the MIT
+License. DanceFlow adds the practice generator, authenticated playlist-save flow,
+client integration, tests and reproducible demo to that existing work.
+
+The original [LICENSE](LICENSE) and [NOTICE](NOTICE) are retained unchanged.
+Original deployment and demonstration documentation remain available in
+[docs/部署.md](docs/部署.md) and [docs/演示.md](docs/演示.md).
+Accurate, copy-ready English resume bullets are in
+[docs/resume-bullets.md](docs/resume-bullets.md).

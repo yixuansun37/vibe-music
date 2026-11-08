@@ -37,7 +37,7 @@ def main():
     status, login = request("/user/login", {"email": credentials["test_email"], "password": credentials["test_password"]})
     demo.require(status == 200 and login.get("code") == 0, "Real login failed")
     token = login["data"]
-    summaries, first_plan = [], None
+    summaries, house_plan = [], None
     for style, minutes in [("hiphop", 20), ("house", 20), ("jazz", 20), ("hiphop", 90)]:
         payload = {"danceStyle": style, "targetMinutes": minutes}
         status, result = request("/playlist/dance/generate", payload, token)
@@ -65,14 +65,16 @@ def main():
             demo.require(repeated["data"] == plan, "Non-AI generation is not repeatable")
         summaries.append({"danceStyle": style, "targetMinutes": minutes, "generationMode": plan["generationMode"],
             "songCount": len(ids), "actualDurationMs": plan["actualDurationMs"], "shortfallMs": plan["shortfallMs"]})
-        first_plan = first_plan or plan
+        if style == "house" and minutes == 20:
+            house_plan = plan
 
     for bad in [{"danceStyle": "unknown", "targetMinutes": 20}, {"danceStyle": "hiphop", "targetMinutes": 20.5}]:
         status, _ = request("/playlist/dance/generate", bad, token)
         demo.require(status == 400, "Invalid generation request was accepted")
-    ids = [s["songId"] for p in first_plan["sections"] for s in p["songs"]]
+    demo.require(house_plan is not None, "House 20-minute plan is missing")
+    ids = [s["songId"] for p in house_plan["sections"] for s in p["songs"]]
     status, saved = request("/playlist/dance/save", {"title": "DanceFlow generated demo " + str(time.time_ns()),
-        "description": "Generated preview; ordering and sections are not persisted", "songIds": ids}, token)
+        "description": "House 20-minute preview; ordering and sections are not persisted", "songIds": ids}, token)
     demo.require(status == 200 and saved.get("code") == 0 and type(saved.get("data")) is int, "Saving failed")
     playlist_id = saved["data"]
     stored = [int(v) for v in demo.sql(f"SELECT song_id FROM tb_playlist_binding WHERE playlist_id={playlist_id};").splitlines()]
@@ -80,6 +82,7 @@ def main():
     status, detail = request(f"/playlist/getPlaylistDetail/{playlist_id}", token=token)
     demo.require(status == 200 and sorted(s["songId"] for s in detail["data"]["songs"]) == sorted(ids), "Saved detail differs")
     report = {"mode": "real MySQL/Redis/backend; no mocks", "plans": summaries, "savedPlaylistId": playlist_id,
+        "savedDanceStyle": "house", "savedTargetMinutes": 20, "savedSongIds": ids,
         "mysqlPersistenceConfirmed": True, "orderingGuaranteed": False,
         "liveAiProviderIndependentlyTested": False, "playbackTested": False}
     demo.private_write(demo.STATE / "practice-verification.json", json.dumps(report, indent=2) + "\n")
